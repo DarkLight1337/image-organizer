@@ -6,11 +6,9 @@ from pathlib import Path
 
 from PIL import ExifTags, Image
 
-from image_organizer.logger import get_logger
-
 from .logger import get_logger
 
-__all__ = ['read_exif_tags', '_try_parse_exif_datetime', 'get_img_captured_timestamp']
+__all__ = ['read_exif_tags', 'read_captured_timestamp']
 
 logger = get_logger()
 
@@ -40,12 +38,13 @@ def _try_parse_exif_datetime(exif_tags: Mapping[int, object], tag_key: int, *, i
         logger.info('Image (%s) has invalid datetime format for tag %s. Reason: Not in "YYYY:MM:DD HH:MM:SS" form.', img_path, tag_key)
         return None
 
-def get_img_captured_timestamp(exif_tags: Mapping[int, object], *, img_path: Path) -> datetime | None:
+def read_captured_timestamp(img_path: Path) -> datetime | None:
     """
-    Gets the timestamp when an image was captured, based on its EXIF tags.
+    Reads the timestamp when an image was captured, based on its EXIF tags.
     """
-    captured_timestamp: datetime | None = None
+    exif_tags = read_exif_tags(img_path)
 
+    captured_timestamp: datetime | None = None
     # Check the following flags in the following order of preference
     for tag_key in (ExifTags.Base.DateTimeOriginal, ExifTags.Base.DateTimeDigitized, ExifTags.Base.DateTime):
         captured_timestamp = _try_parse_exif_datetime(exif_tags, tag_key, img_path=img_path)

@@ -10,7 +10,7 @@ from typing import Literal
 import click
 from tqdm import tqdm
 
-from image_organizer.exif import read_exif_tags, get_img_captured_timestamp
+from image_organizer.exif import read_captured_timestamp
 from image_organizer.filesystem import is_image, mkdirp
 from image_organizer.func import map_mt_with_tqdm
 from image_organizer.logger import set_logger_level
@@ -63,25 +63,23 @@ def groupby_captured_timestamp(
     set_logger_level(logging.INFO)
 
     src_img_paths = [path for path in Path(src).rglob('*') if is_image(path)]
-
-    exif_tags_per_img = map_mt_with_tqdm(
+    src_img_captured_timestamps = map_mt_with_tqdm(
         src_img_paths,
-        read_exif_tags,
+        read_captured_timestamp,
         n_jobs=threads,
         desc='Reading metadata of images',
     )
 
     dst_dir_name_to_src_img_paths: defaultdict[str, list[Path]] = defaultdict(list)
-    for src_img_path, exif_tags in tqdm(
-        zip(src_img_paths, exif_tags_per_img),
+    for src_img_path, captured_timestamp in tqdm(
+        zip(src_img_paths, src_img_captured_timestamps),
         desc=f'Grouping images by {groupby}',
         total=len(src_img_paths),
     ):
-        timestamp = get_img_captured_timestamp(exif_tags, img_path=src_img_path)
-        if timestamp is None:
+        if captured_timestamp is None:
             dst_dir_name = 'UNKNOWN'
         else:
-            dst_dir_name = _get_dst_dir_name(timestamp, groupby=groupby)
+            dst_dir_name = _get_dst_dir_name(captured_timestamp, groupby=groupby)
 
         dst_dir_name_to_src_img_paths[dst_dir_name].append(src_img_path)
 
