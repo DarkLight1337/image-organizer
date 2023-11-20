@@ -28,7 +28,15 @@ def read_exif_tags(img_path: Path) -> Mapping[int, object]:
         for exif_key, value in tags.items():
             ifd_name, tag_name = exif_key
 
+            # Check the following categories in the following order of preference
             pil_exif_key = getattr(ExifTags.Base, tag_name, None)
+            if pil_exif_key is None:
+                pil_exif_key = getattr(ExifTags.GPS, tag_name, None)
+            if pil_exif_key is None:
+                pil_exif_key = getattr(ExifTags.IFD, tag_name, None)
+            if pil_exif_key is None:
+                pil_exif_key = getattr(ExifTags.LightSource, tag_name, None)
+
             if pil_exif_key is not None:
                 pil_exif_tags[pil_exif_key] = value
 
