@@ -1,4 +1,5 @@
 click==8.1.*
+exifread==3.0.*
 pillow==10.0.*
 pqdm==0.2.*
 tqdm==4.65.*

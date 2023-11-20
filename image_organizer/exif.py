@@ -4,7 +4,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from PIL import ExifTags, Image
+import exifread
+from PIL import ExifTags, Image, UnidentifiedImageError
 
 from .logger import get_logger
 
@@ -19,6 +20,19 @@ def read_exif_tags(img_path: Path) -> Mapping[int, object]:
     try:
         with Image.open(img_path) as img:
             return img.getexif()
+    except UnidentifiedImageError:
+        with img_path.open('rb') as f:
+            tags = exifread.process_file(f)
+        
+        pil_exif_tags: dict[int, object] = {}
+        for exif_key, value in tags.items():
+            ifd_name, tag_name = exif_key
+
+            pil_exif_key = getattr(ExifTags, tag_name, None)
+            if pil_exif_key is not None:
+                pil_exif_tags[pil_exif_key] = value
+
+        return pil_exif_tags
     except Exception:
         logger.warning('File (%s) cannot be opened as an image.', img_path, exc_info=True)
         return {}
