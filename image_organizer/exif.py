@@ -16,7 +16,7 @@ logger = get_logger()
 
 def read_exif_tags(img_path: Path) -> Mapping[int, object]:
     """
-    Reads the EXIF tags stored in an image.
+    Reads the EXIF tags stored in an image file.
     """
     try:
         with Image.open(img_path) as img:

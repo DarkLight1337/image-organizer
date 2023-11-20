@@ -15,6 +15,6 @@ def is_image(path: Path) -> bool:
 def mkdirp(path: Path) -> None:
     """
     As the Unix command `mkdir -p`, which automatically creates any parent directories
-    along the way if necessary.
+    along the way if necessary and allows existing directories.
     """
-    return path.mkdir(parents=True)
+    return path.mkdir(parents=True, exist_ok=True)

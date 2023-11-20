@@ -44,9 +44,18 @@ def groupby_captured_timestamp(
     threads: int,
 ):
     """
-    Groups the images in SRC based on the timestamp when they were captured.
+    Given a set of images contained in SRC,
+    groups the images based on the timestamp when they were captured.
 
     The images are outputted under DST, with one directory per group.
+    The directory name is based on the option given to `--groupby`:
+
+    - `year`: `YYYY` format, where `YYYY` is the year.
+
+    - `month`: `YYYYMM` format, where `YYYY` is the year and `MM` is the month.
+
+    - `day`: `YYYYMMDD` format, where `YYYY` is the year, `MM` is the month,
+      and `DD` is the day of the month.
     """
     if Path(dst).exists():
         raise ValueError(f'The destination directory ({dst}) already exists.')
@@ -59,7 +68,7 @@ def groupby_captured_timestamp(
         src_img_paths,
         read_exif_tags,
         n_jobs=threads,
-        desc='Reading images',
+        desc='Reading metadata of images',
     )
 
     dst_dir_name_to_src_img_paths: defaultdict[str, list[Path]] = defaultdict(list)
@@ -76,23 +85,18 @@ def groupby_captured_timestamp(
 
         dst_dir_name_to_src_img_paths[dst_dir_name].append(src_img_path)
 
-    dst_dir_name_to_dst_dir_path = {
-        dst_dir_name: Path(dst) / dst_dir_name
-        for dst_dir_name in dst_dir_name_to_src_img_paths.keys()
+    src_img_path_to_dst_img_path = {
+        src_img_path: Path(dst) / dst_dir_name / src_img_path.name
+        for dst_dir_name, src_img_paths in dst_dir_name_to_src_img_paths.items()
+        for src_img_path in src_img_paths
     }
 
     map_mt_with_tqdm(
-        dst_dir_name_to_dst_dir_path.values(),
+        {path.parent for path in src_img_path_to_dst_img_path.values()},
         mkdirp,
         n_jobs=threads,
         desc='Creating output directories',
     )
-
-    src_img_path_to_dst_img_path = {
-        src_img_path: dst_dir_name_to_dst_dir_path[dst_dir_name] / src_img_path.name
-        for dst_dir_name, src_img_paths in dst_dir_name_to_src_img_paths.items()
-        for src_img_path in src_img_paths
-    }
 
     map_mt_with_tqdm(
         src_img_path_to_dst_img_path.items(),
