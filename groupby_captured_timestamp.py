@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from image_organizer.exif import read_exif_tags, get_img_captured_timestamp
 from image_organizer.filesystem import is_image, mkdirp
-from image_organizer.func import map_parallel_with_tqdm
+from image_organizer.func import map_mt_with_tqdm
 from image_organizer.logger import set_logger_level
 
 __all__ = ['groupby_captured_timestamp']
@@ -55,7 +55,7 @@ def groupby_captured_timestamp(
 
     src_img_paths = [path for path in Path(src).rglob('*') if is_image(path)]
 
-    exif_tags_per_img = map_parallel_with_tqdm(
+    exif_tags_per_img = map_mt_with_tqdm(
         src_img_paths,
         read_exif_tags,
         n_jobs=threads,
@@ -81,7 +81,7 @@ def groupby_captured_timestamp(
         for dst_dir_name in dst_dir_name_to_src_img_paths.keys()
     }
 
-    map_parallel_with_tqdm(
+    map_mt_with_tqdm(
         dst_dir_name_to_dst_dir_path.values(),
         mkdirp,
         n_jobs=threads,
@@ -94,7 +94,7 @@ def groupby_captured_timestamp(
         for src_img_path in src_img_paths
     }
 
-    map_parallel_with_tqdm(
+    map_mt_with_tqdm(
         src_img_path_to_dst_img_path.items(),
         _copyfile,
         n_jobs=threads,
