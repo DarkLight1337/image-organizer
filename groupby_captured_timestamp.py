@@ -11,7 +11,7 @@ import click
 from tqdm import tqdm
 
 from image_organizer.exif import read_exif_tags, get_img_captured_timestamp
-from image_organizer.filesystem import IMG_SUFFIXES, mkdirp
+from image_organizer.filesystem import is_image, mkdirp
 from image_organizer.func import map_parallel_with_tqdm
 from image_organizer.logger import set_logger_level
 
@@ -53,11 +53,7 @@ def groupby_captured_timestamp(
 
     set_logger_level(logging.INFO)
 
-    src_img_paths = [
-        path
-        for path in Path(src).rglob('*')
-        if path.suffix.lower() in IMG_SUFFIXES
-    ]
+    src_img_paths = [path for path in Path(src).rglob('*') if is_image(path)]
 
     exif_tags_per_img = map_parallel_with_tqdm(
         src_img_paths,

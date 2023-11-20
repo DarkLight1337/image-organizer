@@ -3,12 +3,16 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
-__all__ = ['IMG_SUFFIXES', 'mkdirp']
+__all__ = ['is_image', 'mkdirp']
 
-IMG_SUFFIXES = {k for k, v in mimetypes.types_map.items() if v.startswith('image/')}
-"""Files with any of these suffixes are considered to be images."""
+def is_image(path: Path) -> bool:
+    """
+    Tests if a file is an image or not.
+    """
+    filetype, _ = mimetypes.guess_type(path)
+    return filetype is not None and filetype.startswith('image/')
 
-def mkdirp(path: Path):
+def mkdirp(path: Path) -> None:
     """
     As the Unix command `mkdir -p`, which automatically creates any parent directories
     along the way if necessary.
