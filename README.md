@@ -1,6 +1,6 @@
 # Image Organizer
 
-Utility command-line scripts for organizing images.
+This repository contains utility command-line scripts for organizing images.
 
 ## Requirements
 
