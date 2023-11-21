@@ -21,26 +21,30 @@ def read_exif_tags(img_path: Path) -> Mapping[int, object]:
         with Image.open(img_path) as img:
             return img.getexif()
     except UnidentifiedImageError:
-        with img_path.open('rb') as f:
-            tags = exifread.process_file(f)
-        
-        pil_exif_tags: dict[int, object] = {}
-        for exif_key, value in tags.items():
-            ifd_name, tag_name = exif_key
+        try:
+            with img_path.open('rb') as f:
+                tags = exifread.process_file(f)
 
-            # Check the following categories in the following order of preference
-            pil_exif_key = getattr(ExifTags.Base, tag_name, None)
-            if pil_exif_key is None:
-                pil_exif_key = getattr(ExifTags.GPS, tag_name, None)
-            if pil_exif_key is None:
-                pil_exif_key = getattr(ExifTags.IFD, tag_name, None)
-            if pil_exif_key is None:
-                pil_exif_key = getattr(ExifTags.LightSource, tag_name, None)
+            pil_exif_tags: dict[int, object] = {}
+            for exif_key, value in tags.items():
+                ifd_name, tag_name = exif_key.split(' ')
 
-            if pil_exif_key is not None:
-                pil_exif_tags[pil_exif_key] = value
+                # Check the following categories in the following order of preference
+                pil_exif_key = getattr(ExifTags.Base, tag_name, None)
+                if pil_exif_key is None:
+                    pil_exif_key = getattr(ExifTags.GPS, tag_name, None)
+                if pil_exif_key is None:
+                    pil_exif_key = getattr(ExifTags.IFD, tag_name, None)
+                if pil_exif_key is None:
+                    pil_exif_key = getattr(ExifTags.LightSource, tag_name, None)
 
-        return pil_exif_tags
+                if pil_exif_key is not None:
+                    pil_exif_tags[pil_exif_key] = value
+
+            return pil_exif_tags
+        except Exception:
+            logger.warning('File (%s) cannot be opened as an image.', img_path, exc_info=True)
+            return {}
     except Exception:
         logger.warning('File (%s) cannot be opened as an image.', img_path, exc_info=True)
         return {}
